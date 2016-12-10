@@ -1,0 +1,15 @@
+CC = gcc
+CXX = g++
+CFLAGS = -g -O3 -Wall -W -std=c11
+CXXFLAGS = $(CFLAGS)
+LDFLAGS =
+LDLIBS = -lm -L/usr/local/lib/ -lpaho-mqtt3c
+
+# Target
+TARGET = get_sensor_from_serial detect
+
+.PHONY : all clean
+all : $(TARGET)
+
+clean :
+	$(RM) *.o $(TARGET) *.exe
