@@ -2,6 +2,7 @@
 #include "Connection_information.h"
 #include "math_utilities.h"
 #include <iostream>
+#include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
