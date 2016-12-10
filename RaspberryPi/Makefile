@@ -6,7 +6,7 @@ LDFLAGS =
 LDLIBS = -lm -L/usr/local/lib/ -lpaho-mqtt3c
 
 # Target
-TARGET = get_sensor_from_serial detect
+TARGET = get_sensor_from_serial detect subscribe publish
 
 .PHONY : all clean
 all : $(TARGET)

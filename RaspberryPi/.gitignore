@@ -1,2 +1,4 @@
 detect
 get_sensor_from_serial
+publish
+subscribe

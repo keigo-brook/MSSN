@@ -1,15 +1,15 @@
+#include <string>
+#include <unistd.h>
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 #include "MQTTClient.h"
 
-#define ADDRESS     "tcp://192.168.101.188:1883"
-#define CLIENTID    "RaspberryPi30002"
-#define TOPIC       "MSSN/signal/IDS"
 #define QOS         1
 #define TIMEOUT     10000L
 
 volatile MQTTClient_deliveryToken deliveredtoken;
+
 
 void delivered(void *context, MQTTClient_deliveryToken dt)
 {
@@ -22,7 +22,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
     int i;
     char* payloadptr;
 
-    payloadptr = message->payload;
+    payloadptr = (char *)message->payload;
     for(i=0; i<message->payloadlen; i++)
     {
         putchar(*payloadptr++);
@@ -41,13 +41,40 @@ void connlost(void *context, char *cause)
 
 int main(int argc, char* argv[])
 {
+    int i, opt;
+    opterr = 0;
+
+    std::string address, clientID, topic;
+
+    while ((opt = getopt(argc, argv, "a:c:t:")) != -1) {
+        //コマンドライン引数のオプションがなくなるまで繰り返す
+        switch (opt) {
+            case 'a':
+		address = optarg;                
+                break;
+            case 'c':
+		clientID = optarg;
+                break;
+            case 't':
+		topic = optarg;
+                break;
+            default:
+                //指定していないオプションが渡された場合
+                printf("Usage: %s [-f] [-g] [-h argment] arg1 ...\n", argv[0]);
+                break;
+        }
+    }
+
+    if (address.empty() || clientID.empty() || topic.empty()) {
+	printf("ERROR: option null\n");
+	exit(1);
+    }
     MQTTClient client;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     int rc;
     int ch;
 
-    MQTTClient_create(&client, ADDRESS, CLIENTID,
-        MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    MQTTClient_create(&client, address.c_str(), clientID.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
     conn_opts.keepAliveInterval = 20;
     conn_opts.cleansession = 1;
 
@@ -60,7 +87,7 @@ int main(int argc, char* argv[])
     }
     //printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
     //       "Press Q<Enter> to quit\n\n", TOPIC, CLIENTID, QOS);
-    MQTTClient_subscribe(client, TOPIC, QOS);
+    MQTTClient_subscribe(client, topic.c_str(), QOS);
 
     do
     {

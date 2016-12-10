@@ -1,0 +1,6 @@
+[package]
+name = "event_detection"
+version = "0.1.0"
+authors = ["Keigo Ogawa <goog@brookbach.com>"]
+
+[dependencies]

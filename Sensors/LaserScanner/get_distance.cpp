@@ -11,7 +11,6 @@ using namespace qrk;
 using namespace std;
 
 Urg_driver urg;
-
 namespace
 {
     void print_data(const Urg_driver& urg,
@@ -32,7 +31,6 @@ namespace
 }
 
 void handler(int s) {
-    cout << "stop: " << s << endl;
     urg.stop_measurement();
     exit(0);
 }
@@ -86,6 +84,7 @@ void short_scan(int capture_times, int sps) {
     print_data(urg, data, time_stamp);
     capture_count++;
   }
+ 
   urg.stop_measurement();
 }
 
