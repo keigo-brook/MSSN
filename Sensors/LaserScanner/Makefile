@@ -2,7 +2,7 @@
 # $Id$
 
 # Compile options
-CARGO = cargo
+CARGO = cargo 
 SRCDIR = ./lib/src
 INCLUDEDIR = ./lib/include/cpp
 BINDIR = ./bin
@@ -25,13 +25,13 @@ clean :
 depend :
 	makedepend -Y -- $(INCLUDES) -- $(wildcard *.h *.c)
 
-clustring:
+get_cluster:
 	cd $@/ && $(CARGO) build && $(CARGO) build --release
 
 event_detection:
 	cd $@/ && $(CARGO) build && $(CARGO) build --release
 
-.PHONY : all depend clean clustring event_detection
+.PHONY : all depend clean get_cluster event_detection
 
 ######################################################################
 REQUIRE_LIB = $(SRCDIR)/liburg_cpp.a

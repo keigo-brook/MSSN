@@ -21,10 +21,9 @@ impl Point2 {
             .split(' ')
             .map(|s| s.parse().unwrap())
             .collect();
-        buffer.clear();
         if xy.len() < 2 {
             return None;
-        } 
+        }
         Some(Point2 {
             x: xy[0],
             y: xy[1],
@@ -142,7 +141,7 @@ impl Clusters {
 }
 
 fn read_data(bg_data: &Vec<Point2>) -> Option<Vec<Point2>> {
-    let mut data = vec![]; 
+    let mut data = vec![];
     for i in 0..1081 {
         let mut point;
         if let Some(p) = Point2::read_point() {
@@ -164,9 +163,16 @@ fn main() {
 
     // 1081.times { bgdata.push(gets.split.map(&:to_i)) }
     let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer).expect("Failed to get timestamp");
+    loop {
+        io::stdin().read_line(&mut buffer).expect("Failed to get timestamp");
+        let t: Vec<i32> = buffer.trim().split(' ').map(|s| s.parse().unwrap()).collect();
+        buffer.clear();
+        if t.len() == 1 {
+            println!("{}", t[0]);
+            break;
+        }
+    }
 
-    buffer.clear();
     for _ in 0..1081 {
         if let Some(p) = Point2::read_point() {
             bg_data.push(p);
@@ -176,6 +182,7 @@ fn main() {
     }
 
     loop {
+        buffer.clear();
         match io::stdin().read_line(&mut buffer) {
             Ok(l) if l == 0 => break, // EOF
             Ok(_) => {},
@@ -183,18 +190,17 @@ fn main() {
         }
         let t: i32 = match buffer.trim().parse() {
             Ok(t) => t,
-            Err(_) => { 
-                buffer.clear(); 
+            Err(_) => {
                 continue;
             }
         };
-        buffer.clear();
         if let Some(data) = read_data(&bg_data) {
             // clusters = Clustering.calc_culsters(data)
-            let mut clusters = Clusters { points: vec![] };
-            clusters.calc_clusters(data);
-            println!("{} {}", t, clusters.points.len());
-            clusters.print_points();
+            // let mut clusters = Clusters { points: vec![] };
+            // clusters.calc_clusters(data);
+            // println!("{} {}", t, clusters.points.len());
+            println!("{}", t);
+            // clusters.print_points();
         }
     }
 }
