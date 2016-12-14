@@ -121,7 +121,7 @@ impl EventDetection {
         } else {
             0
         };
-        println!(" {}", result);
+        println!("{}", result);
     }
 }
 
@@ -149,7 +149,7 @@ fn main() {
         }
         sequences.push((t, data));
         if t - last_detected_at >= 1000 {
-            print!("{} {}", t, sequences.len());
+            // print!("{} ", t);
             EventDetection::detect(sequences);
             sequences = vec![];
             last_detected_at = t;
