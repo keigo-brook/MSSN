@@ -6,7 +6,7 @@
 
 #define ADDRESS     "tcp://192.168.101.188:1883"
 #define CLIENTID    "RaspberryPi30001"
-#define TOPIC       "MSSN/signal/IDS"
+#define TOPIC       "/IDS/Detection"
 #define QOS         1
 #define TIMEOUT     10000L
 
