@@ -36,8 +36,8 @@ fn print_legend() {
     t.fg(term::color::BRIGHT_BLUE).unwrap();
     writeln!(t, "QoS 3 ").unwrap();
     t.fg(term::color::BRIGHT_GREEN).unwrap();
-    //writeln!(t, "Network").unwrap();
-    //t.reset().unwrap();
+    // writeln!(t, "Network").unwrap();
+    // t.reset().unwrap();
 }
 
 fn print_topics(topics: &[SubscribeTopic]) {
@@ -46,10 +46,11 @@ fn print_topics(topics: &[SubscribeTopic]) {
     write!(t, "     Subscribe ").unwrap();
     for topic in topics {
         t.fg(match topic.qos {
-            QoS::AtMostOnce => term::color::BRIGHT_CYAN,
-            QoS::AtLeastOnce => term::color::BRIGHT_MAGENTA,
-            QoS::ExactlyOnce => term::color::BRIGHT_BLUE
-        }).unwrap();
+                QoS::AtMostOnce => term::color::BRIGHT_CYAN,
+                QoS::AtLeastOnce => term::color::BRIGHT_MAGENTA,
+                QoS::ExactlyOnce => term::color::BRIGHT_BLUE,
+            })
+            .unwrap();
         write!(t, "{} ", topic.topic_path).unwrap();
     }
     t.reset().unwrap();
@@ -236,12 +237,13 @@ fn main() {
                     let color = match message.qos {
                         QoS::AtMostOnce => term::color::BRIGHT_CYAN,
                         QoS::AtLeastOnce => term::color::BRIGHT_MAGENTA,
-                        QoS::ExactlyOnce => term::color::BRIGHT_BLUE
+                        QoS::ExactlyOnce => term::color::BRIGHT_BLUE,
                     };
                     let payload = match String::from_utf8((*message.payload).clone()) {
                         Ok(payload) => payload,
                         Err(_) => {
-                            format!("payload did not contain valid UTF-8 ({} bytes)", message.payload.len())
+                            format!("payload did not contain valid UTF-8 ({} bytes)",
+                                    message.payload.len())
                         }
                     };
 
@@ -255,8 +257,9 @@ fn main() {
                             }
                         };
                         for i in 1..1082 {
-                            let p: Vec<i32> = data[i].split(' ').map(|s| s.parse::<i32>().unwrap()).collect();
-                            bg_data.push(Point2{ x: p[0], y: p[1]});
+                            let p: Vec<i32> =
+                                data[i].split(' ').map(|s| s.parse::<i32>().unwrap()).collect();
+                            bg_data.push(Point2 { x: p[0], y: p[1] });
                         }
                     } else {
                         for i in 0..(data.len() / 1082) {
@@ -266,7 +269,9 @@ fn main() {
                                     continue;
                                 }
                             };
-                            if let Some(data) = read_data(&bg_data, &data[(1 + i * 1082)..(1082 + i * 1082)]) {
+                            if let Some(data) = read_data(&bg_data,
+                                                          &data[(1 + i * 1082)..(1082 +
+                                                                                 i * 1082)]) {
                                 let mut clusters = Clusters { points: vec![] };
                                 clusters.calc_clusters(data);
                                 println!("{} {}", t, clusters.points.len());
@@ -282,43 +287,47 @@ fn main() {
                     }
 
                 }
-            },
+            }
             Err(e) => {
-                    match e {
-                        Error::UnhandledPuback(_) => { print_error("unhandled puback") },
-                        Error::UnhandledPubrec(_) => { print_error("unhandled pubrec") },
-                        Error::UnhandledPubrel(_) => { print_error("unhandled pubrel") },
-                        Error::UnhandledPubcomp(_) => { print_error("unhandled pubcomp") },
-                        Error::Mqtt(ref err) => match *err {
+                match e {
+                    Error::UnhandledPuback(_) => print_error("unhandled puback"),
+                    Error::UnhandledPubrec(_) => print_error("unhandled pubrec"),
+                    Error::UnhandledPubrel(_) => print_error("unhandled pubrel"),
+                    Error::UnhandledPubcomp(_) => print_error("unhandled pubcomp"),
+                    Error::Mqtt(ref err) => {
+                        match *err {
                             mqtt3::Error::TopicNameMustNotContainNonUtf8 => {
                                 print_error("topic name contains non-UTF-8 characters")
-                            },
+                            }
                             mqtt3::Error::TopicNameMustNotContainWildcard => {
                                 print_error("topic name contains wildcard")
-                            },
+                            }
                             _ => {
                                 print_error(format!("{:?}", e));
                                 exit(64);
                             }
-                        },
-                        Error::Storage(ref err) => match *err {
+                        }
+                    }
+                    Error::Storage(ref err) => {
+                        match *err {
                             store::Error::NotFound(pid) => {
                                 // we have lost something
                                 let _ = client.complete(pid);
-                            },
+                            }
                             store::Error::Unavailable(_) => {
                                 // do nothing, just wait next pubrel
                             }
-                        },
-                        Error::Disconnected | Error::ConnectionAbort => {
-                            exit(64);
-                        },
-                        e => {
-                            print_error(format!("{:?}", e));
-                            client.terminate();
-                            exit(64);
                         }
                     }
+                    Error::Disconnected | Error::ConnectionAbort => {
+                        exit(64);
+                    }
+                    e => {
+                        print_error(format!("{:?}", e));
+                        client.terminate();
+                        exit(64);
+                    }
+                }
             }
         }
     }

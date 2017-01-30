@@ -36,23 +36,6 @@ int sendMessage(const char* payload) {
 Urg_driver urg;
 namespace
 {
-  void print_data(const vector<long>& data, long time_stamp) {
-    // \~Japanese 全てのデータの X-Y の位置を表示
-    // \~english Prints the X-Y coordinates for all the measurement points
-        size_t data_n = data.size();
-        stringstream ss;
-        ss << time_stamp << endl;
-        for (size_t i = 0; i < data_n; ++i) {
-            long l = data[i];
-            double radian = urg.index2rad(i);
-            long x = static_cast<long>(l * cos(radian));
-            long y = static_cast<long>(l * sin(radian));
-            ss << x << " " << y << endl;
-        }
-        string payload = ss.str();
-        sendMessage(payload.c_str());
-  }
-
   string pack_data(const vector<long> &data, long time_stamp) {
     size_t data_n = data.size();
     stringstream ss;
@@ -66,6 +49,12 @@ namespace
     }
     return ss.str();
   }
+  // send one scan data
+  void send_data(const vector<long>& data, long time_stamp) {
+    string payload = pack_data(data, time_stamp);
+    sendMessage(payload.c_str());
+  }
+
 }
 
 void handler(int s) {
@@ -85,7 +74,7 @@ void long_scan(int capture_times, int sps) {
       cout << "Urg_driver::get_distance(): " << urg.what() << endl;
       exit(1);
     }
-    print_data(data, time_stamp);
+    send_data(data, time_stamp);
     urg.stop_measurement();
     capture_count++;
   }
@@ -177,10 +166,11 @@ int main() {
     }
 
     string message;
-    int mode = 0, p_id;
+    int p_id = getpid();
+    int mode = 0;
     signal(SIGINT, handler);
     while (true) {
-      if ((p_id = fork()) == 0) {
+      if (p_id == 0) {
         // child process
         if (mode == 0) {
           scan(0, 1);

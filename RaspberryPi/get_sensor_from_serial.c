@@ -1,11 +1,11 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <termios.h>
 #include <string.h>
-#include <time.h>
 #include <sys/time.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 
 #define BAUD_RATE B9600
 #define BUFF_SIZE 4096
@@ -22,12 +22,12 @@ void serial_init(int fd) {
   tcsetattr(fd, TCSANOW, &tio);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   unsigned char buffer[BUFF_SIZE], in_data[BUFF_SIZE];
   /* printf("start serial port read\n"); */
 
   // open device file (serial port)
-  char* dev_name = argv[1];
+  char *dev_name = argv[1];
   if (dev_name == NULL) {
     printf("ARGV[1](DEV_NAME) is NULL\n");
     exit(1);
@@ -58,21 +58,20 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
-    if (len < 0 ) {
+    if (len < 0) {
       printf("ERROR: %d\n", len);
       perror("");
       exit(2);
     }
 
-
-    //gettimeofday(&timer, NULL);
+    // gettimeofday(&timer, NULL);
     for (int j = 0; j < len; j++) {
       in_data[i] = buffer[j];
       i++;
       if (buffer[j] == '\n') {
         in_data[i] = '\0';
-        //printf("%ld.%ld %s", timer.tv_sec, timer.tv_usec, &in_data[0]);
-	printf("%s", &in_data[0]);
+        // printf("%ld.%ld %s", timer.tv_sec, timer.tv_usec, &in_data[0]);
+        printf("%s", &in_data[0]);
         fflush(stdout);
         i = 0;
         memset(in_data, 0, BUFF_SIZE);

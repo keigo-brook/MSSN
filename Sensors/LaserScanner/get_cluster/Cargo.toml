@@ -5,7 +5,7 @@ authors = ["Keigo Ogawa <goog@brookbach.com>"]
 
 [dependencies]
 term = "0.2"
-rust-mq = { path = "/home/okeigo/work/rust-mq" }
+rust-mq = { path = "./rust-mq" }
 mqtt3 = "0.1"
 netopt = "0.1"
 mqttc = "0.1"

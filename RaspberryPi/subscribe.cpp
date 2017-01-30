@@ -1,122 +1,121 @@
-#include <string>
-#include <unistd.h>
-#include <vector>
-#include <sstream>
+#include "MQTTClient.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "MQTTClient.h"
+#include <sstream>
+#include <string>
+#include <unistd.h>
+#include <vector>
 
-#define QOS         1
-#define TIMEOUT     10000L
+#define QOS 1
+#define TIMEOUT 10000L
 
 volatile MQTTClient_deliveryToken deliveredtoken;
 
-std::vector<std::string> split(const std::string &str, char sep) {
-  std::vector<std::string> v;
-  std::stringstream ss(str);
-  std::string buffer;
-  while( std::getline(ss, buffer, sep) ) {
-    v.push_back(buffer);
+void delivered(void *context, MQTTClient_deliveryToken dt) {
+  printf("Message with token value %d delivery confirmed\n", dt);
+  deliveredtoken = dt;
+}
+
+int msgarrvd(void *context, char *topicName, int topicLen,
+             MQTTClient_message *message) {
+  int i;
+  char *payloadptr;
+
+  payloadptr = (char *)message->payload;
+  for (i = 0; i < message->payloadlen; i++) {
+    putchar(*payloadptr++);
   }
-  return v;
+  putchar('\n');
+  MQTTClient_freeMessage(&message);
+  MQTTClient_free(topicName);
+  return 1;
 }
 
-
-void delivered(void *context, MQTTClient_deliveryToken dt)
-{
-    printf("Message with token value %d delivery confirmed\n", dt);
-    deliveredtoken = dt;
+void connlost(void *context, char *cause) {
+  printf("\nConnection lost\n");
+  printf("     cause: %s\n", cause);
 }
 
-int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message)
-{
-    int i;
-    char* payloadptr;
+struct client_params {
+  MQTTClient client;
+  std::string address;
+  std::string clientID;
+  std::string topic;
+};
 
-    payloadptr = (char *)message->payload;
-    for(i=0; i<message->payloadlen; i++)
-    {
-        putchar(*payloadptr++);
+client_params create_subclient(std::string address, std::string cID, std::string topic) {
+  MQTTClient client;
+  MQTTClient_create(&client, address.c_str(), cID.c_str(),
+                    MQTTCLIENT_PERSISTENCE_NONE, NULL);
+  MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+  MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+  int rc;
+  if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+    printf("Failed to connect, return code %d\n", rc);
+    exit(-1);
+  }
+  conn_opts.keepAliveInterval = 20;
+  conn_opts.cleansession = 1;
+
+  client_params cp = { client, address, cID, topic};
+  return cp;
+}
+
+std::vector<client_params> parse_opt(int i, char *t[]) {
+  int opt;
+
+  std::vector<std::string> addresses, cIDs, topics;
+  while ((opt = getopt(i, t, "a:c:t:")) != -1) {
+    //コマンドライン引数のオプションがなくなるまで繰り返す
+    switch (opt) {
+    case 'a':
+      addresses.push_back(optarg);
+      break;
+    case 'c':
+      cIDs.push_back(optarg);
+      break;
+    case 't':
+      topics.push_back(optarg);
+      break;
+    default:
+      //指定していないオプションが渡された場合
+      break;
     }
-    putchar('\n');
-    MQTTClient_freeMessage(&message);
-    MQTTClient_free(topicName);
-    return 1;
+  }
+
+  if (!(addresses.size() == cIDs.size() && cIDs.size() == topics.empty())) {
+    printf("ERROR: option size different\n");
+    exit(1);
+  }
+
+  std::vector<client_params> clients;
+  for (int i = 0; i < (int)addresses.size(); i++) {
+    clients.push_back(create_subclient(addresses[i], cIDs[i], topics[i]));
+  }
+  return clients;
 }
 
-void connlost(void *context, char *cause)
-{
-    printf("\nConnection lost\n");
-    printf("     cause: %s\n", cause);
+/*
+  -a ip -c client id -t topic をsubscribeしたいぶんだけ
+ */
+int main(int argc, char *argv[]) {
+  opterr = 0;
+  auto clients = parse_opt(argc, argv);
+  for (auto it = clients.begin(); it != clients.end(); ++it) {
+    MQTTClient_subscribe(it->client, it->topic.c_str(), QOS);
+  }
+
+  int ch;
+  // printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
+  //       "Press Q<Enter> to quit\n\n", TOPIC, CLIENTID, QOS);
+  do {
+    ch = getchar();
+  } while (ch != 'Q' && ch != 'q');
+
+  for (auto it = clients.begin(); it != clients.end(); ++it) {
+    MQTTClient_disconnect(it->client, 10000);
+    MQTTClient_destroy(&it->client);
+  }
+  return 0;
 }
-
-int main(int argc, char* argv[])
-{
-    int i, opt;
-    opterr = 0;
-
-    std::string address, clientID;
-    std::vector<std::string> topic;
-
-    while ((opt = getopt(argc, argv, "a:c:t:")) != -1) {
-        //コマンドライン引数のオプションがなくなるまで繰り返す
-        switch (opt) {
-            case 'a':
-              address = optarg;
-                break;
-            case 'c':
-              clientID = optarg;
-                break;
-            case 't':
-              topic = split(optarg, ' ');
-                break;
-            default:
-                //指定していないオプションが渡された場合
-                printf("Usage: %s [-f] [-g] [-h argment] arg1 ...\n", argv[0]);
-                break;
-        }
-    }
-
-    if (address.empty() || clientID.empty() || topic.empty()) {
-	printf("ERROR: option null\n");
-	exit(1);
-    }
-    MQTTClient client, client2;
-    MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-    int rc;
-    int ch;
-
-    MQTTClient_create(&client, address.c_str(), clientID.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
-    MQTTClient_create(&client2, address.c_str(), "RPi-idsdetect", MQTTCLIENT_PERSISTENCE_NONE, NULL);
-    conn_opts.keepAliveInterval = 20;
-    conn_opts.cleansession = 1;
-
-    MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
-    MQTTClient_setCallbacks(client2, NULL, connlost, msgarrvd, delivered);
-
-    if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
-    {
-        printf("Failed to connect, return code %d\n", rc);
-        exit(-1);
-    }
-    if ((rc = MQTTClient_connect(client2, &conn_opts)) != MQTTCLIENT_SUCCESS)
-      {
-        printf("Failed to connect, return code %d\n", rc);
-        exit(-1);
-      }
-    //printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
-    //       "Press Q<Enter> to quit\n\n", TOPIC, CLIENTID, QOS);
-    MQTTClient_subscribe(client, topic[0].c_str(), QOS);
-    MQTTClient_subscribe(client2, topic[1].c_str(), QOS);
-
-    do
-    {
-        ch = getchar();
-    } while(ch!='Q' && ch != 'q');
-
-    MQTTClient_disconnect(client, 10000);
-    MQTTClient_destroy(&client);
-    return rc;
-}
-

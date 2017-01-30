@@ -15,7 +15,7 @@ LDFLAGS =
 LDLIBS = -lm $(shell if test `echo $(OS) | grep Windows`; then echo "-lwsock32 -lsetupapi"; else if test `uname -s | grep Darwin`; then echo ""; else echo "-lrt"; fi; fi) -L$(SRCDIR) -L/usr/local/lib/ -lpaho-mqtt3c
 
 # Target
-TARGET = get_distance clustring event_detection get_and_pub
+TARGET = get_distance clustring event_detection get_and_pub simple_scan
 
 all : $(TARGET)
 
@@ -40,3 +40,4 @@ $(REQUIRE_LIB) : $(wildcard $(SRCDIR)/*.[ch])
 
 get_distance : ./lib/Connection_information.o $(REQUIRE_LIB)
 get_and_pub: ./lib/Connection_information.o $(REQUIRE_LIB)
+simple_scan: ./lib/Connection_information.o $(REQUIRE_LIB)
