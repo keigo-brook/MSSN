@@ -44,7 +44,8 @@ int main(int argc, char *argv[]) {
 
   /* printf("start main loop\n"); */
   int i = 0, k = 0;
-  struct timeval timer;
+  struct timeval timer, first_time;
+  gettimeofday(&first_time, NULL);
 
   while (1) {
     int len = read(fd, buffer, BUFF_SIZE);
@@ -70,8 +71,12 @@ int main(int argc, char *argv[]) {
       i++;
       if (buffer[j] == '\n') {
         in_data[i] = '\0';
-        printf("%ld.%d %s", timer.tv_sec, timer.tv_usec, &in_data[0]);
+        long msec_time =
+          ((timer.tv_sec - first_time.tv_sec) * 1000) +
+          ((timer.tv_usec - first_time.tv_usec) / 1000);
         /* printf("%s", &in_data[0]); */
+        /* printf("%ld.%d %s", timer.tv_sec, timer.tv_usec, &in_data[0]); */
+        printf("%ld %s", msec_time, &in_data[0]);
         fflush(stdout);
         i = 0;
         memset(in_data, 0, BUFF_SIZE);

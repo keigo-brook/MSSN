@@ -1,6 +1,7 @@
 #include "Urg_driver.h"
 #include "Connection_information.h"
 #include "math_utilities.h"
+#include "ticks.h"
 #include <iostream>
 #include <stdlib.h>
 #include <signal.h>
