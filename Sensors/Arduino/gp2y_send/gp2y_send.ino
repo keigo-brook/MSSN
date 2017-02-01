@@ -29,7 +29,6 @@ void loop() {
     if (sleepTime < (2 << 16)) {
       sleepTime = 2 << 16;
     }
-    Serial.println(sleepTime >> 16);
     oldTime = newTime;
     delay(sleepTime >> 16);
     newTime = millis() >> 16;
