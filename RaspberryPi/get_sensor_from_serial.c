@@ -64,14 +64,14 @@ int main(int argc, char *argv[]) {
       exit(2);
     }
 
-    // gettimeofday(&timer, NULL);
+    gettimeofday(&timer, NULL);
     for (int j = 0; j < len; j++) {
       in_data[i] = buffer[j];
       i++;
       if (buffer[j] == '\n') {
         in_data[i] = '\0';
-        // printf("%ld.%ld %s", timer.tv_sec, timer.tv_usec, &in_data[0]);
-        printf("%s", &in_data[0]);
+        printf("%ld.%d %s", timer.tv_sec, timer.tv_usec, &in_data[0]);
+        /* printf("%s", &in_data[0]); */
         fflush(stdout);
         i = 0;
         memset(in_data, 0, BUFF_SIZE);
