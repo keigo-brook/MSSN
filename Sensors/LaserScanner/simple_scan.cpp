@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 
 using namespace qrk;
 using namespace std;
@@ -20,7 +21,7 @@ namespace
     // \~japanese 全てのデータの X-Y の位置を表示
     // \~english Prints the X-Y coordinates for all the measurement points
         size_t data_n = data.size();
-        cout << time_stamp << endl;
+        // cout << time_stamp << endl;
         for (size_t i = 0; i < data_n; ++i) {
             long l = data[i];
             double radian = urg.index2rad(i);
@@ -40,6 +41,7 @@ int main(int argc, char *argv[]) {
     }
 
     urg.start_measurement(Urg_driver::Distance, 0, 0);
+    char buff[256] = "";
     while (true) {
       vector<long> data;
       long time_stamp = 0;
@@ -48,6 +50,11 @@ int main(int argc, char *argv[]) {
         cout << "Urg_driver::get_distance(): " << urg.what() << endl;
         exit(1);
       }
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      struct tm *pnow = localtime(&now.tv_sec);
+      sprintf(buff, "%04d/%02d/%02d %02d:%2d:%2d.%06d", pnow->tm_year + 1900, pnow->tm_mon+1, pnow->tm_mday, pnow->tm_hour, pnow->tm_min, pnow->tm_sec, now.tv_usec);
+      std::cout << buff << std::endl;
       print_data(urg, data, time_stamp);
     }
 
